@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="1080dp"
+    android:height="1920dp"
+    android:viewportWidth="1080"
+    android:viewportHeight="1920">
+
+    <path android:pathData="M0,0h1080v1920h-1080z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:angle="135"
+                android:endX="1080"
+                android:endY="1920"
+                android:startX="0"
+                android:startY="0"
+                android:type="linear">
+                <item android:color="#FF0F2027" android:offset="0.0" />
+                <item android:color="#FF203A43" android:offset="0.5" />
+                <item android:color="#FF2C5364" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Glowing Blob 1 -->
+    <path android:pathData="M 300,400 m -350,0 a 350,350 0 1,0 700,0 a 350,350 0 1,0 -700,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:centerX="300"
+                android:centerY="400"
+                android:gradientRadius="350"
+                android:type="radial">
+                <item android:color="#808E2DE2" android:offset="0.0" />
+                <item android:color="#004A00E0" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Glowing Blob 2 -->
+    <path android:pathData="M 800,1200 m -450,0 a 450,450 0 1,0 900,0 a 450,450 0 1,0 -900,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:centerX="800"
+                android:centerY="1200"
+                android:gradientRadius="450"
+                android:type="radial">
+                <item android:color="#90FF007F" android:offset="0.0" />
+                <item android:color="#007F00FF" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Glowing Blob 3 -->
+    <path android:pathData="M 200,1600 m -300,0 a 300,300 0 1,0 600,0 a 300,300 0 1,0 -600,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:centerX="200"
+                android:centerY="1600"
+                android:gradientRadius="300"
+                android:type="radial">
+                <item android:color="#7000F2FE" android:offset="0.0" />
+                <item android:color="#004FACFE" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>

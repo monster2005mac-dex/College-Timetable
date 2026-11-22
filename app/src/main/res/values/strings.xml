@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">College Timetable Pro</string>
+    <string name="shortcut_add_class_short">Add Slot</string>
+    <string name="shortcut_add_class_long">Add Class Slot</string>
+    <string name="shortcut_bunks_short">Bunk Tracker</string>
+    <string name="shortcut_bunks_long">Attendance &amp; Bunk Tracker</string>
+    <string name="shortcut_exams_short">Exams</string>
+    <string name="shortcut_exams_long">Exams &amp; Assignments</string>
+</resources>

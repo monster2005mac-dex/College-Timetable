@@ -1,0 +1,23 @@
+# Android build outputs & local config
+*.iml
+.gradle
+/local.properties
+/.idea/
+.DS_Store
+/build
+/app/build
+/captures
+.externalNativeBuild
+.cxx
+
+# Web Node & Next.js build outputs
+/web/node_modules
+/web/.next
+/web/out
+/web/.env.local
+/web/.env.development.local
+/web/.env.test.local
+/web/.env.production.local
+/web/npm-debug.log*
+/web/yarn-debug.log*
+/web/yarn-error.log*

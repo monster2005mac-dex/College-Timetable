@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="add_class"
+        android:enabled="true"
+        android:icon="@android:drawable/ic_input_add"
+        android:shortcutShortLabel="@string/shortcut_add_class_short"
+        android:shortcutLongLabel="@string/shortcut_add_class_long">
+        <intent
+            android:action="com.example.collegetimetable.ADD_CLASS"
+            android:targetClass="com.example.collegetimetable.MainActivity"
+            android:targetPackage="com.example.collegetimetable" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="open_bunks"
+        android:enabled="true"
+        android:icon="@android:drawable/ic_dialog_info"
+        android:shortcutShortLabel="@string/shortcut_bunks_short"
+        android:shortcutLongLabel="@string/shortcut_bunks_long">
+        <intent
+            android:action="com.example.collegetimetable.OPEN_ATTENDANCE"
+            android:targetClass="com.example.collegetimetable.MainActivity"
+            android:targetPackage="com.example.collegetimetable" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="open_exams"
+        android:enabled="true"
+        android:icon="@android:drawable/ic_menu_today"
+        android:shortcutShortLabel="@string/shortcut_exams_short"
+        android:shortcutLongLabel="@string/shortcut_exams_long">
+        <intent
+            android:action="com.example.collegetimetable.OPEN_EXAMS"
+            android:targetClass="com.example.collegetimetable.MainActivity"
+            android:targetPackage="com.example.collegetimetable" />
+    </shortcut>
+</shortcuts>

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "984199619270",
+    "project_id": "college-timetable-pro",
+    "storage_bucket": "college-timetable-pro.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:984199619270:android:ab3fc703bcc347d12eedc7",
+        "android_client_info": {
+          "package_name": "com.example.collegetimetable"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "984199619270-4b4dhdqi4hm7iih60qo5dpkeor7ipp7j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWSWeQDB5g2vDksZYqzIx6fYh1sJtFO2k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "984199619270-4b4dhdqi4hm7iih60qo5dpkeor7ipp7j.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,3 @@
+<resources>
+    <style name="Theme.CollegeTimetable" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
