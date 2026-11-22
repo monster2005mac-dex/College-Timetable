@@ -1,5 +1,8 @@
 package com.example.collegetimetable.components
 
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,6 +23,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -35,15 +39,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.fragment.app.FragmentActivity
 import com.example.collegetimetable.AuthManager
 import com.example.collegetimetable.GlassDialogShape
 import com.example.collegetimetable.GlassErrorColor
+import com.example.collegetimetable.GlassInputShape
 import com.example.collegetimetable.GlassPanel
 import com.example.collegetimetable.GlassPillShape
 import com.example.collegetimetable.OnGlassErrorColor
+import com.example.collegetimetable.SecurityManager
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import dev.chrisbanes.haze.HazeState
 import kotlinx.coroutines.launch
 
@@ -55,6 +66,7 @@ fun GlassAuthDialog(
     onSignOut: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val currentUser = AuthManager.currentUser
 
@@ -63,6 +75,53 @@ fun GlassAuthDialog(
     var isSignUp by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    // Google Sign-In Launcher
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                val idToken = account?.idToken
+                if (!idToken.isNullOrEmpty()) {
+                    isLoading = true
+                    coroutineScope.launch {
+                        val authResult = AuthManager.signInWithGoogleCredential(idToken)
+                        isLoading = false
+                        authResult.fold(
+                            onSuccess = {
+                                onSuccessLogin()
+                                onDismiss()
+                            },
+                            onFailure = { ex ->
+                                errorMessage = ex.localizedMessage ?: "Google sign in failed"
+                            }
+                        )
+                    }
+                } else {
+                    errorMessage = "Failed to retrieve Google ID Token"
+                }
+            } catch (e: Exception) {
+                errorMessage = e.localizedMessage ?: "Google Sign-In canceled or failed"
+            }
+        }
+    }
+
+    fun launchGoogleSignIn() {
+        try {
+            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken("984199619270-4b4dhdqi4hm7iih60qo5dpkeor7ipp7j.apps.googleusercontent.com")
+                .requestEmail()
+                .build()
+
+            val googleSignInClient = GoogleSignIn.getClient(context, gso)
+            googleSignInLauncher.launch(googleSignInClient.signInIntent)
+        } catch (e: Exception) {
+            errorMessage = e.localizedMessage ?: "Could not launch Google Sign-In"
+        }
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         GlassPanel(
@@ -113,7 +172,7 @@ fun GlassAuthDialog(
                 }
 
                 if (currentUser != null) {
-                    // Logged In Card State
+                    // Logged In State
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -130,13 +189,13 @@ fun GlassAuthDialog(
                                 color = accentColor
                             )
                             Text(
-                                text = currentUser.email ?: "Logged In User",
+                                text = currentUser.email ?: "Logged In Student",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
                             Text(
-                                text = "Real-time sync is active between Android & Web.",
+                                text = "Real-time live sync is active between Android & Web.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color.White.copy(alpha = 0.75f)
                             )
@@ -164,7 +223,83 @@ fun GlassAuthDialog(
                         )
                     }
                 } else {
-                    // Form Inputs
+                    // Google Sign-In Button (Identical to Web)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(GlassInputShape)
+                            .background(Color.White)
+                            .clickable { launchGoogleSignIn() }
+                            .padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Sign in with Google",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                        }
+                    }
+
+                    // Device Biometric Button (Identical to Web)
+                    if (SecurityManager.isBiometricAvailable(context) && context is FragmentActivity) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(GlassInputShape)
+                                .background(Color.White.copy(alpha = 0.12f))
+                                .border(1.dp, Color.White.copy(alpha = 0.25f), GlassInputShape)
+                                .clickable {
+                                    SecurityManager.promptBiometricUnlock(
+                                        activity = context,
+                                        onSuccess = {
+                                            onSuccessLogin()
+                                            onDismiss()
+                                        },
+                                        onError = { err ->
+                                            errorMessage = err
+                                        }
+                                    )
+                                }
+                                .padding(vertical = 12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Fingerprint,
+                                    contentDescription = null,
+                                    tint = accentColor,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Sign in with Device Biometrics 🔑",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    }
+
+                    // Divider
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(modifier = Modifier.weight(1f).height(1.dp).background(Color.White.copy(alpha = 0.2f)))
+                        Text(
+                            text = " OR ",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.5f),
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                        Box(modifier = Modifier.weight(1f).height(1.dp).background(Color.White.copy(alpha = 0.2f)))
+                    }
+
+                    // Email Form Inputs
                     GlassInputField(
                         value = email,
                         onValueChange = { email = it },
