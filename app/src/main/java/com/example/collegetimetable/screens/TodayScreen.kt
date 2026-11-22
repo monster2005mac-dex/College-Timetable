@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,6 +53,7 @@ import com.example.collegetimetable.dayNames
 import com.example.collegetimetable.getClassProgressStatus
 import com.example.collegetimetable.getHeroStatus
 import dev.chrisbanes.haze.HazeState
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
@@ -79,16 +81,20 @@ fun TodayScreen(
         pageCount = { 7 }
     )
 
-    LaunchedEffect(pagerState.currentPage) {
-        val newDay = pagerState.currentPage + 1
-        if (newDay != selectedDayVal) {
-            onDaySelected(newDay)
+    // Sync Pager Settled State to Selected Day without jitter during gesture
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.settledPage }.collectLatest { page ->
+            val newDay = page + 1
+            if (newDay != selectedDayVal) {
+                onDaySelected(newDay)
+            }
         }
     }
 
+    // Sync Selected Day changes from Strip/Calendar to Pager
     LaunchedEffect(selectedDayVal) {
         val targetPage = selectedDayVal - 1
-        if (pagerState.currentPage != targetPage) {
+        if (pagerState.settledPage != targetPage && !pagerState.isScrollInProgress) {
             pagerState.animateScrollToPage(targetPage)
         }
     }

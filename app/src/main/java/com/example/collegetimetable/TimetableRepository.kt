@@ -26,7 +26,7 @@ class TimetableRepository(context: Context) {
                     colorIndex = o.optInt("colorIndex", 0)
                 )
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             emptyList()
         }
     }
@@ -47,6 +47,10 @@ class TimetableRepository(context: Context) {
             )
         }
         prefs.edit().putString(KEY, arr.toString()).apply()
+    }
+
+    fun clearAll() {
+        prefs.edit().clear().apply()
     }
 
     private companion object {

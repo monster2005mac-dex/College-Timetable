@@ -78,6 +78,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.collegetimetable.components.FullMonthCalendarDialog
+import com.example.collegetimetable.components.GlassAuthDialog
 import com.example.collegetimetable.components.GlassBottomBar
 import com.example.collegetimetable.components.GlassClassDialog
 import com.example.collegetimetable.components.NavigationDestination
@@ -212,6 +213,7 @@ fun TimetableApp(
     var currentDestination by rememberSaveable { mutableStateOf(NavigationDestination.TODAY) }
     var dialogEntry by remember { mutableStateOf<ClassEntry?>(null) }
     var showFullCalendarDialog by remember { mutableStateOf(false) }
+    var showAuthDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     // Handle App Shortcut intents
@@ -476,7 +478,31 @@ fun TimetableApp(
                                 on24HourToggled = { is24Hour = it },
                                 onWeekStartsMondayToggled = { weekStartsMonday = it },
                                 onRemindersToggled = { remindersEnabled = it },
-                                onReminderLeadMinutesSelected = { reminderLeadMinutes = it }
+                                onReminderLeadMinutesSelected = { reminderLeadMinutes = it },
+                                onOpenAuthClicked = { showAuthDialog = true },
+                                onResetAllDataClicked = {
+                                    AlarmScheduler.cancelAll(context, entries)
+                                    entries.forEach { FirestoreSyncManager.deleteEntryFromCloud(it.id) }
+                                    exams.forEach { FirestoreSyncManager.deleteExamFromCloud(it.id) }
+
+                                    vm.clearAll()
+                                    attendanceRepo.clearAll()
+                                    examRepo.clearAll()
+                                    prefs.edit().clear().apply()
+
+                                    attendanceRecords = emptyMap()
+                                    exams = emptyList()
+                                    selectedWallpaper = "builtin:0"
+                                    is24Hour = false
+                                    weekStartsMonday = true
+                                    remindersEnabled = true
+                                    reminderLeadMinutes = 10
+
+                                    coroutineScope.launch {
+                                        TimetableWidget.refreshAll(context)
+                                        snackbarHostState.showSnackbar("App reset to factory clean state ✨")
+                                    }
+                                }
                             )
                         }
                     }
@@ -542,6 +568,31 @@ fun TimetableApp(
                 }
             }
         }
+    }
+
+    // Auth Sign-In / Cloud Sync Glass Dialog
+    if (showAuthDialog) {
+        GlassAuthDialog(
+            accentColor = animatedAccent,
+            hazeState = hazeState,
+            onSuccessLogin = {
+                FirestoreSyncManager.startRealtimeSync(
+                    context = context,
+                    onEntriesUpdated = { list -> list.forEach { vm.upsert(it) } },
+                    onAttendanceUpdated = { map -> attendanceRecords = map; attendanceRepo.saveAll(map) },
+                    onExamsUpdated = { list -> exams = list; examRepo.saveAll(list) }
+                )
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar("Signed in & Cloud Sync Active ⚡")
+                }
+            },
+            onSignOut = {
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar("Signed out of Cloud Sync")
+                }
+            },
+            onDismiss = { showAuthDialog = false }
+        )
     }
 
     // Full Month Interactive Calendar Dialog

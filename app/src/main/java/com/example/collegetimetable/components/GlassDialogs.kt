@@ -1,6 +1,11 @@
 package com.example.collegetimetable.components
 
+import android.app.Activity
 import android.app.TimePickerDialog
+import android.content.Intent
+import android.speech.RecognizerIntent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,6 +31,7 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Schedule
@@ -98,6 +104,20 @@ fun GlassClassDialog(
     var room by remember { mutableStateOf(entry.room) }
     var teacher by remember { mutableStateOf(entry.teacher) }
 
+    // Speech Recognizer Launcher
+    val speechLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val spokenText = result.data
+                ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+            if (!spokenText.isNullOrEmpty()) {
+                subject = spokenText
+            }
+        }
+    }
+
     // Multi-Day / Repeat selection (set of days e.g. 1..7)
     var selectedDays by remember { mutableStateOf(setOf(entry.day)) }
 
@@ -132,29 +152,60 @@ fun GlassClassDialog(
                 // Title
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(accentColor.copy(alpha = 0.3f))
-                            .border(1.dp, accentColor, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = selectedCategory.icon,
-                            contentDescription = null,
-                            tint = accentColor,
-                            modifier = Modifier.size(20.dp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(accentColor.copy(alpha = 0.3f))
+                                .border(1.dp, accentColor, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = selectedCategory.icon,
+                                contentDescription = null,
+                                tint = accentColor,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = if (isNew) "Add Event / Task" else "Edit Slot",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
                         )
                     }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = if (isNew) "Add Event / Task" else "Edit Slot",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
+
+                    // Voice Speech-To-Text Microphone Button
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(accentColor.copy(alpha = 0.25f))
+                            .border(1.dp, accentColor, CircleShape)
+                            .clickable {
+                                try {
+                                    val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                        putExtra(
+                                            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                                            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+                                        )
+                                        putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak title/subject name...")
+                                    }
+                                    speechLauncher.launch(intent)
+                                } catch (_: Exception) {}
+                            }
+                            .padding(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Mic,
+                            contentDescription = "Voice Input",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
 
                 // Event Category Presets

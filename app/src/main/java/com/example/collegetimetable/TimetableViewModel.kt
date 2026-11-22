@@ -32,6 +32,11 @@ class TimetableViewModel(app: Application) : AndroidViewModel(app) {
         commit(_entries.value.filterNot { it.id == id })
     }
 
+    fun clearAll() {
+        repo.clearAll()
+        _entries.value = emptyList()
+    }
+
     private fun commit(list: List<ClassEntry>) {
         _entries.value = list
         repo.save(list)

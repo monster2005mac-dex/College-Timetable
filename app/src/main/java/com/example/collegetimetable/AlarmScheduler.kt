@@ -6,9 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import java.time.DayOfWeek
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.ZoneId
 import java.time.temporal.TemporalAdjusters
 
@@ -17,7 +15,6 @@ object AlarmScheduler {
     fun scheduleReminder(context: Context, entry: ClassEntry, leadMinutes: Int = 10, is24Hour: Boolean = false) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-        // Calculate next upcoming occurrence of entry.day & entry.startMin - leadMinutes
         val now = LocalDateTime.now()
         val targetDayOfWeek = DayOfWeek.of(entry.day) // 1=Mon ... 7=Sun
 
@@ -30,7 +27,6 @@ object AlarmScheduler {
             .withSecond(0)
             .minusMinutes(leadMinutes.toLong())
 
-        // If time already passed today, schedule for next week
         if (triggerDateTime.isBefore(now)) {
             triggerDateTime = triggerDateTime.plusWeeks(1)
         }
@@ -82,6 +78,10 @@ object AlarmScheduler {
             alarmManager.cancel(pendingIntent)
             pendingIntent.cancel()
         }
+    }
+
+    fun cancelAll(context: Context, entries: List<ClassEntry>) {
+        entries.forEach { cancelReminder(context, it.id) }
     }
 
     fun rescheduleAll(context: Context, entries: List<ClassEntry>, leadMinutes: Int = 10, is24Hour: Boolean = false) {

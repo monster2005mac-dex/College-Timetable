@@ -27,17 +27,10 @@ data class AttendanceRecord(
         val targetFraction = targetPercentage / 100f
 
         return if (currentPct >= targetPercentage) {
-            // How many can we skip? (attended / (total + skip)) >= targetFraction
-            // attended >= targetFraction * (total + skip)
-            // skip <= (attended / targetFraction) - total
             val maxTotal = (attended / targetFraction).toDouble()
             val safeSkips = (maxTotal - totalConducted).toInt().coerceAtLeast(0)
             BunkAdvice.SafeToSkip(safeSkips)
         } else {
-            // How many must we attend? ((attended + need) / (total + need)) >= targetFraction
-            // attended + need >= targetFraction * total + targetFraction * need
-            // need * (1 - targetFraction) >= targetFraction * total - attended
-            // need >= (targetFraction * total - attended) / (1 - targetFraction)
             val num = (targetFraction * totalConducted) - attended
             val den = 1f - targetFraction
             val needed = ceil((num / den).toDouble()).toInt().coerceAtLeast(1)
@@ -93,5 +86,9 @@ class AttendanceRepository(context: Context) {
             )
         }
         prefs.edit().putString("records", arr.toString()).apply()
+    }
+
+    fun clearAll() {
+        prefs.edit().clear().apply()
     }
 }

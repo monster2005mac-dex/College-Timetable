@@ -22,16 +22,24 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CloudSync
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,7 +51,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.collegetimetable.AuthManager
+import com.example.collegetimetable.GlassErrorColor
 import com.example.collegetimetable.GlassPanel
+import com.example.collegetimetable.OnGlassErrorColor
 import com.example.collegetimetable.builtinWallpapers
 import dev.chrisbanes.haze.HazeState
 
@@ -61,8 +72,13 @@ fun SettingsScreen(
     on24HourToggled: (Boolean) -> Unit,
     onWeekStartsMondayToggled: (Boolean) -> Unit,
     onRemindersToggled: (Boolean) -> Unit,
-    onReminderLeadMinutesSelected: (Int) -> Unit
+    onReminderLeadMinutesSelected: (Int) -> Unit,
+    onOpenAuthClicked: () -> Unit,
+    onResetAllDataClicked: () -> Unit
 ) {
+    var showResetDialog by remember { mutableStateOf(false) }
+    val currentUser = AuthManager.currentUser
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -76,6 +92,52 @@ fun SettingsScreen(
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
+
+        // Cloud Sync & Account Card
+        GlassPanel(
+            hazeState = hazeState,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(26.dp),
+            shadowElevation = 10.dp,
+            onClick = onOpenAuthClicked
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(accentColor.copy(alpha = 0.3f))
+                        .border(1.dp, accentColor, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CloudSync,
+                        contentDescription = null,
+                        tint = accentColor,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Cloud Sync & Web Account ☁️",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = if (currentUser != null) "Synced as ${currentUser.email} ⚡" else "Tap to sign in & sync with Web website",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontSize = 11.sp,
+                        color = if (currentUser != null) accentColor else Color.White.copy(alpha = 0.75f)
+                    )
+                }
+            }
+        }
 
         // Class Alarms & Reminders Card
         GlassPanel(
@@ -157,7 +219,6 @@ fun SettingsScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Horizontal Scrollable Lead Time Chips to prevent clipping or squeezing
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -240,7 +301,6 @@ fun SettingsScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Built-in Wallpapers Row
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -285,7 +345,6 @@ fun SettingsScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Pick from Gallery Button
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -450,5 +509,102 @@ fun SettingsScreen(
                 )
             }
         }
+
+        // Reset All App Data Card (Red Danger Zone)
+        GlassPanel(
+            hazeState = hazeState,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(26.dp),
+            shadowElevation = 10.dp,
+            glassColor = GlassErrorColor,
+            glassAlphaTop = 0.25f,
+            glassAlphaBottom = 0.12f,
+            onClick = { showResetDialog = true }
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(GlassErrorColor.copy(alpha = 0.3f))
+                        .border(1.dp, GlassErrorColor, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.DeleteForever,
+                        contentDescription = null,
+                        tint = OnGlassErrorColor,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Reset All App Data ⚠️",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = OnGlassErrorColor
+                    )
+                    Text(
+                        text = "Clear all classes, attendance & exams to start fresh",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontSize = 11.sp,
+                        color = Color.White.copy(alpha = 0.8f)
+                    )
+                }
+            }
+        }
+    }
+
+    // Confirmation Alert Dialog
+    if (showResetDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetDialog = false },
+            containerColor = Color(0xFF1E182A),
+            title = {
+                Text(
+                    text = "Reset Everything? ⚠️",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            },
+            text = {
+                Text(
+                    text = "This will permanently delete all class schedule slots, attendance records, exam deadlines, and app settings to make the app brand-new.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.85f)
+                )
+            },
+            confirmButton = {
+                Box(
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(GlassErrorColor)
+                        .clickable {
+                            showResetDialog = false
+                            onResetAllDataClicked()
+                        }
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "Reset Everything ⚠️",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetDialog = false }) {
+                    Text("Cancel", color = Color.White.copy(alpha = 0.7f))
+                }
+            }
+        )
     }
 }

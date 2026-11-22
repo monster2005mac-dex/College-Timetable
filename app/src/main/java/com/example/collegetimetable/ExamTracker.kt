@@ -92,4 +92,8 @@ class ExamRepository(context: Context) {
         }
         prefs.edit().putString("exams", arr.toString()).apply()
     }
+
+    fun clearAll() {
+        prefs.edit().clear().apply()
+    }
 }
