@@ -64,9 +64,8 @@ dependencies {
     // WorkManager for background widget updates
     implementation("androidx.work:work-runtime-ktx:2.9.1")
 
-    // Firebase SDKs
+    // Firebase SDKs (100% Free Tier Spark Plan)
     implementation(platform("com.google.firebase:firebase-bom:33.3.0"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
-    implementation("com.google.firebase:firebase-storage-ktx")
 }
